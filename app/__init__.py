@@ -6,7 +6,7 @@ from .stock_routes import stock_bp
 from .correlation_routes import correlation_bp
 def create_app():
     app=Flask(__name__)
-    CORS(app)
+    CORS(app, resources={r"/*": {"origins": ["http://localhost:5173", "https://sentimentapi.jeremygranizo.tech"]}})
     app.register_blueprint(main_bp) #route is registered
     app.register_blueprint(reddit_bp,url_prefix='/api/reddit')
     app.register_blueprint(stock_bp,url_prefix='/api/stock')
