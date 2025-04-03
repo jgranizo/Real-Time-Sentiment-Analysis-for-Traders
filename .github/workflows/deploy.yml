@@ -15,14 +15,17 @@ jobs:
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.ARTIFACT_SSH_KEY }}" > ~/.ssh/id_rsa
+          echo ${{ secrets.ARTIFACT_SSH_KEY }} > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
+          
       - name: Debug SSH Key
         run: |
-          cat ~/.ssh/id_rsa
+            ls -la ~/.ssh
+            cat ~/.ssh/id_rsa
+            
       - name: Deploy to server
         run: |
-              ssh -tt -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'ENDSSH'
+              ssh --i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'ENDSSH'
               git pull
               ENDSSH
