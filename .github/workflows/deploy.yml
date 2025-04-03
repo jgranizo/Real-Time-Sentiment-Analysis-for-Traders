@@ -19,6 +19,6 @@ jobs:
 
       - name: Deploy to server
         run: |
-          ssh -t -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'ENDSSH'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'ENDSSH'
           git pull
           ENDSSH
