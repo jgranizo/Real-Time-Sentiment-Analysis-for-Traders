@@ -18,7 +18,7 @@ jobs:
           echo ${{ secrets.ARTIFACT_SSH_KEY }} > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.HOST }} >> ~/.ssh/known_hosts
-          
+
       - name: Debug SSH Key
         run: |
             ls -la ~/.ssh
@@ -26,6 +26,6 @@ jobs:
             
       - name: Deploy to server
         run: |
-              ssh --i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'ENDSSH'
+              ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'ENDSSH'
               git pull
               ENDSSH
