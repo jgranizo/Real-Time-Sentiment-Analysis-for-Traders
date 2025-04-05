@@ -4,11 +4,12 @@ import Home from './pages/Home';
 import StockPage from './pages/StockPage';
 import RedditPage from './pages/RedditPage';
 import CorrelationPage from './pages/correlationPage'
-
+import Navbar from './components/Navbar'
 
 function App() {
     return (
         <Router>
+            <Navbar />
             <Routes>
                 <Route path='/' element={<Home></Home>}></Route>
                 <Route path='/stock/:ticker' element={<StockPage></StockPage>}></Route>
