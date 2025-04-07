@@ -14,7 +14,7 @@ reddit = praw.Reddit(
 
 
 # Define criteria
-brand_name = ["Tesla", "Microsft", "Amazon", "Apple"]
+brand_name = ["Tesla", "Microsoft", "Amazon", "Apple"]
 min_score = 1  # Minimum score to filter high-upvote posts
 min_comments = 1  # Minimum number of comments for high engagement
 days_limit = 1000  # Only get posts from the last 7 days
@@ -36,17 +36,17 @@ def fetch_reddit_post():
         subreddit = reddit.subreddit(subreddit_name)
 
         # Filter posts based on criteria
-
-        for post in subreddit.search(brand_name):
-            if (
+        for company in brand_name:
+            for post in subreddit.search(company):
+                if (
                 post.created_utc >= timestamp_limit_start
                 and post.created_utc <= timestamp_limit_end
-            ):
-                existing_post = RedditPostData.query.filter_by(post_id=post.id).first()
-                if existing_post:
-                    print(f"Duplicate post detected: {post.title} - Skipping")
-                    continue
-                post_info = {
+                ):
+                    existing_post = RedditPostData.query.filter_by(post_id=post.id).first()
+                    if existing_post:
+                        print(f"Duplicate post detected: {post.title} - Skipping")
+                        continue
+                    post_info = {
                     "title": post.title,
                     "score": post.score,
                     "number_comments": post.num_comments,
@@ -59,17 +59,32 @@ def fetch_reddit_post():
                     "upvote_ratio": post.upvote_ratio,
                     "num_cross_posts": post.num_crossposts,
                     "post_id": post.id,
-                }
-                try:
-                    new_post = RedditPostData(**post_info)
-                    db.session.add(new_post)
-                    db.session.commit()
-                    print(f"Stored post: {post.title} from r/{subreddit_name}")
-                except Exception as e:
-                    db.session.rollback()
-                    print(f"Error saving post: {e}")
+                    "company": company
+                        }
+                    try:
+                        new_post = RedditPostData(**post_info)
+                        db.session.add(new_post)
+                        db.session.commit()
+                        print(f"Stored post: {post.title} from r/{subreddit_name}")
+                        
+                    except Exception as e:
+                        db.session.rollback()
+                        print(f"Error saving post: {e}")
 
 
+
+def get_reddit_data(ticker):
+    companies = {"TSLA": "Tesla","MSFT":"Microsoft","APPL": "Apple"}
+    if ticker not in companies.keys():
+        print("Not a valid ticker")
+        return 
+    try:
+        redditData = RedditPostData.query.filter(RedditPostData.company==companies[ticker]).all()
+        return [item.to_dict() for item in redditData]
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error retrieving reddit posts: {e}")
+        return None
 """
 def get_reddit_metrics(ticker):
     
