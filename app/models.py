@@ -40,7 +40,8 @@ class RedditPostData(db.Model):
     number_upvotes: Mapped[int] = mapped_column(Integer, nullable=False)
     upvote_ratio: Mapped[float] = mapped_column(Float, nullable=False)
     num_cross_posts: Mapped[int] = mapped_column(Integer, nullable=False)
-
+    company: Mapped[str] = mapped_column(String, nullable=False)
+    
     def to_dict(self):
         return {
             "id": self.id,
@@ -53,7 +54,8 @@ class RedditPostData(db.Model):
             "url": self.url,
             "number_upvotes": self.number_upvotes,
             "upvote_ratio": self.upvote_ratio,
-            "num_cross_posts": self.num_cross_posts
+            "num_cross_posts": self.num_cross_posts,
+            "company": self.company
         }
 
     def __repr__(self):
