@@ -1,27 +1,26 @@
-#from app.services.reddit_service import get_reddit_metrics
-from app.services.stock_service import get_stock_metrics
-def get_correlation_metrics(ticker):
+from app.services.reddit_service import get_reddit_data_by_date
+from app.services.stock_service import get_stock_by_date
+def get_correlation_metrics(ticker,start_date,end_date):
     #getting reddit and stock data
     #todo: incorporate time frame
-    #reddit = get_reddit_metrics(ticker)
-    stock = get_stock_metrics(ticker)
+    #Get correct data
+  reddit_post = get_reddit_data_by_date(ticker,start_date,end_date)
+  stocks = get_stock_by_date(ticker,start_date,end_date)
 
-   # sentiment = reddit["sentiment_score"]
-    volatility = stock["volatility"]
+  mapped_reddit_data={"RedditActivityIndex":[],"Creation_date": []
+                      ,"Number_of_comments":[],"Upvotes": [],"UpvotesRatio":[], "Sentiment_Score":[]}
+  for post in reddit_post:
+    RAI = post["number_comments"] +( post["upvote_ratio"] * post["number_upvotes"])
+    mapped_reddit_data["RedditActivityIndex"].append(RAI)
+    mapped_reddit_data["Creation_date"].append(post["date_of_creation"])
+    mapped_reddit_data["Number_of_comments"].append(post["number_comments"])
+    mapped_reddit_data["Upvotes"].append(post["number_upvotes"])
+    mapped_reddit_data["UpvotesRatio"].append(post["upvote_ratio"])
+    mapped_reddit_data["Sentiment_Score"].append(post["sentiment_score"])
 
-    #simple dummy formula for now for correlation score
-   # correlation = round(sentiment*volatility,3)
+  '''Reddit Activity index'''
+  '''Number of comments *  number upvotes* upvote ratio'''
 
-
-
-
-    return {
-        "ticker":ticker,
-      #  "sentiment_score": sentiment,
-        "volatilty":volatility,
-       # "correlation": correlation, #eventually calculated with real data,
-       # "activity_index": reddit["activity_index"],
-       # "virality_score": reddit["virality_score"],
-        "price_series": stock["price_series"]
-
-    }
+  '''Sentiment Score per post'''
+  ''' Sum all scores and divide by total num of comments'''
+  return mapped_reddit_data
