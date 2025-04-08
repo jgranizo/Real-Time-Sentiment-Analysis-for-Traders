@@ -4,14 +4,13 @@ import csv
 from datetime import datetime, timedelta, timezone
 from app.models import RedditPostData
 from app.extensions import db
-
+from app.services.predict import predict
 # Initialize Reddit API client with your credentials
 reddit = praw.Reddit(
     client_id="ZPr2EshdHCAQUHQ1B4LRdQ",
     client_secret="D_pSNQdQpLFu0xkme74Sket1zGUorg",
     user_agent="BrandDataCollector/1.0 by u/jgran",
 )
-
 
 # Define criteria
 brand_name = ["Tesla", "Microsoft", "Amazon", "Apple"]
@@ -29,6 +28,17 @@ subreddits = ["technology", "gadgets", "stocks"]
 posts_data = []
 subreddit_dictionary = {}
 
+def calculateSentimentValues(comments):
+    sentiments = {0:0,1:0,2:0}
+    #negative-0    neutral-1,        positive-2
+
+    #each comment increments a counter for its corresponding sentiment
+    for comment in comments:
+        sentiment_value = predict(comment)
+        sentiments[sentiment_value]+=1
+
+    return sentiments
+    
 
 def fetch_reddit_post():
     for subreddit_name in subreddits:
@@ -46,6 +56,14 @@ def fetch_reddit_post():
                     if existing_post:
                         print(f"Duplicate post detected: {post.title} - Skipping")
                         continue
+                    post.comment_sort = 'top'
+                    post.comments.replace_more(limit=0)
+                    comments = [comment.body for comment in post.comments]
+                    SentimentMap=calculateSentimentValues(comments)
+                    sentiment_score = len(comments)/3
+                    positive_comments = SentimentMap[2]
+                    neutral_comments = SentimentMap[1]
+                    negative_comments = SentimentMap[0]
                     post_info = {
                     "title": post.title,
                     "score": post.score,
@@ -59,7 +77,11 @@ def fetch_reddit_post():
                     "upvote_ratio": post.upvote_ratio,
                     "num_cross_posts": post.num_crossposts,
                     "post_id": post.id,
-                    "company": company
+                    "company": company,
+                    "sentiment_score":sentiment_score,
+                    "positive_comments":positive_comments,
+                    "negative_comments":negative_comments,
+                    "neutral_comments": neutral_comments
                         }
                     try:
                         new_post = RedditPostData(**post_info)
@@ -74,61 +96,35 @@ def fetch_reddit_post():
 
 
 def get_reddit_data(ticker):
+    uppercaseTicker = str(ticker).upper()
     companies = {"TSLA": "Tesla","MSFT":"Microsoft","APPL": "Apple"}
-    if ticker not in companies.keys():
+    if uppercaseTicker not in companies.keys():
         print("Not a valid ticker")
         return 
     try:
-        redditData = RedditPostData.query.filter(RedditPostData.company==companies[ticker]).all()
+        redditData = RedditPostData.query.filter(RedditPostData.company==companies[uppercaseTicker]).all()
         return [item.to_dict() for item in redditData]
     except Exception as e:
         db.session.rollback()
         print(f"Error retrieving reddit posts: {e}")
         return None
-"""
-def get_reddit_metrics(ticker):
-    
-    sample_posts = [
-        {
-            "num_comments": 40,
-            "ups": 120,
-            "upvote_ratio": 0.93,
-            "score": 150,
-            "total_awards": 2,
-            "crossposts": 1,
-            "sentiment": 0.76  # Assume you ran NLP on the title/comments
-        },
-        {
-            "num_comments": 20,
-            "ups": 80,
-            "upvote_ratio": 0.89,
-            "score": 90,
-            "total_awards": 1,
-            "crossposts": 0,
-            "sentiment": 0.60
-        }
-    ]
-    total_sentiment=0
-    total_activity=0
-    total_virality = 0
-    count = len(sample_posts)
-    
-    for post in sample_posts:
-        activity = post['num_comments']*post["ups"]* post["upvote_ratio"]
-        virality = math.log(post["score"]+1) + post["total_awards"] + post["crossposts"]
-        total_sentiment += post["sentiment"]
-        total_activity += activity
-        total_virality += virality
 
-    avg_sentiment = total_sentiment/ count if count else 0
-    avg_activity =total_activity / count if count else 0
-    avg_virality = total_virality / count if count else 0
-    return{
-        "ticker":ticker,
-        "activity_index": round(total_activity,2),
-        "sentiment_score": round(avg_sentiment,3),
-        "virality_score": round(avg_virality,3)
+def get_reddit_data_by_date(ticker,start_date=None,end_date=None):
+    uppercaseTicker = str(ticker).upper()
+    companies = {"TSLA": "Tesla","MSFT":"Microsoft","APPL": "Apple"}
+    if uppercaseTicker not in companies.keys():
+        print("Not a valid ticker")
+        return 
+    try:
+        query = RedditPostData.query.filter(RedditPostData.company == companies[uppercaseTicker])
+        if start_date and end_date:
+            start = datetime.strptime(start_date,"%Y-%m-%d").date()
+            end = datetime.strptime(end_date, "%Y-%m-%d").date()
+            query = query.filter(RedditPostData.date_of_creation>=start).filter(RedditPostData.date_of_creation<=end)
 
-    }
-
-    """
+        result = query.all()
+        return [item.to_dict() for item in result]
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error retrieving reddit posts: {e}")
+        return None
