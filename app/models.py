@@ -41,6 +41,10 @@ class RedditPostData(db.Model):
     upvote_ratio: Mapped[float] = mapped_column(Float, nullable=False)
     num_cross_posts: Mapped[int] = mapped_column(Integer, nullable=False)
     company: Mapped[str] = mapped_column(String, nullable=False)
+    sentiment_score: Mapped[float] = mapped_column(Numeric(10, 2))
+    positive_comments: Mapped[int] = mapped_column(Integer, nullable=False)
+    neutral_comments: Mapped[int] = mapped_column(Integer, nullable=False)
+    negative_comments: Mapped[int] = mapped_column(Integer, nullable=False)
     
     def to_dict(self):
         return {
@@ -55,7 +59,11 @@ class RedditPostData(db.Model):
             "number_upvotes": self.number_upvotes,
             "upvote_ratio": self.upvote_ratio,
             "num_cross_posts": self.num_cross_posts,
-            "company": self.company
+            "company": self.company,
+            "sentiment_score": self.sentiment_score,
+            "negative_comments": self.negative_comments,
+            "positive_comments": self.positive_comments,
+            "neutral_comments": self.neutral_comments
         }
 
     def __repr__(self):
