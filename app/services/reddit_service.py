@@ -60,10 +60,11 @@ def fetch_reddit_post():
                     post.comments.replace_more(limit=0)
                     comments = [comment.body for comment in post.comments]
                     SentimentMap=calculateSentimentValues(comments)
-                    sentiment_score = len(comments)/3
+                    
                     positive_comments = SentimentMap[2]
                     neutral_comments = SentimentMap[1]
                     negative_comments = SentimentMap[0]
+                    sentiment_score = (positive_comments+neutral_comments+negative_comments)/3
                     post_info = {
                     "title": post.title,
                     "score": post.score,
