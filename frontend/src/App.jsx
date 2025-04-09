@@ -3,7 +3,7 @@ import {BrowserRouter as Router,Routes, Route} from 'react-router-dom'
 import Home from './pages/Home';
 import StockPage from './pages/StockPage';
 import RedditPage from './pages/RedditPage';
-import CorrelationPage from './pages/correlationPage'
+import CorrelationPage from './pages/CorrelationPage';
 import Navbar from './components/Navbar'
 
 function App() {

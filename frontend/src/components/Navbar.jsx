@@ -8,7 +8,7 @@ function Navbar(){
             <Link to ='/'>Home</Link>
             <Link to ='/stock/TSLA'>Stock</Link>
             <Link to ='/reddit/TSLA'>Reddit</Link>
-            <Link to ='/correlation'>Correlation</Link>
+            <Link to ='/correlation/'>Correlation</Link>
 
 
         </nav>
