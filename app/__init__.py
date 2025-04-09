@@ -28,8 +28,8 @@ def create_app():
                 ]
             }
         },
+        origins=["http://localhost:5173"]
     )
-    
     
     app.register_blueprint(main_bp)  # route is registered
     app.register_blueprint(reddit_bp, url_prefix="/api/reddit")
@@ -39,4 +39,5 @@ def create_app():
     #Initialize database within app context
     with app.app_context():
         db.create_all()
+        
     return app
