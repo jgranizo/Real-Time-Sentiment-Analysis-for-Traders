@@ -53,7 +53,7 @@ class RedditPostData(db.Model):
             "title": self.title,
             "score": self.score,
             "number_comments": self.number_comments,
-            "date_of_creation": self.date_of_creation.strftime('%Y-%m-%d %H:%M:%S'),
+            "date_of_creation": self.date_of_creation.strftime('%Y-%m-%d'),
             "subreddit_name": self.subreddit_name,
             "url": self.url,
             "number_upvotes": self.number_upvotes,
