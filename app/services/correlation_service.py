@@ -5,6 +5,10 @@ from flask import jsonify
 
 
 def get_correlation_metrics(ticker, start_date, end_date):
+    print(ticker)
+    print(list(start_date))
+    print(list(end_date))
+    
     # getting reddit and stock data
     # todo: incorporate time frame
     # Get correct data
@@ -44,6 +48,15 @@ def get_correlation_metrics(ticker, start_date, end_date):
     df_reddit = pd.DataFrame(mapped_reddit_data)
     df_stock = pd.DataFrame(mapped_stock_data)
     # merge similar dates onto one df to compare
+    if df_stock is None or df_reddit is None:
+        print(df_reddit)
+        print(df_stock)
+
+        return []
+
+    if df_stock.empty or df_reddit.empty:
+
+        return []
     df_merged = pd.merge(df_reddit, df_stock, on="date")
 
     correlated_values = []
