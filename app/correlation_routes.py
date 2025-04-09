@@ -1,9 +1,11 @@
 from flask import Blueprint,jsonify,request
 from app.services.correlation_service import get_correlation_metrics
 import pandas as pd
+from flask_cors import cross_origin
 correlation_bp = Blueprint('correlation',__name__)
 #create route for correlation_bp
 @correlation_bp.route('/<ticker>',methods=['GET'])
+@cross_origin(origins=["http://localhost:5173", "https://sentimentapi.jeremygranizo.tech"])
 def get_correlation_data(ticker):
 
     start_date = request.args.get('start_date')
