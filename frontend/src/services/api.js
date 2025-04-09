@@ -26,10 +26,10 @@ export const getRedditData = async (ticker) =>{
     }
 }
 
-export const getCorrelationData = async (ticker) =>{
+export const getCorrelationData = async (ticker,start_date,end_date) =>{
     try {
-        const response = await axios.get(`${API_BASE_URL}/api/correlation/${ticker}`)
-
+        const response = await axios.get(`${API_BASE_URL}correlation/${ticker}?start_date=${start_date}&end_date=${end_date}`)
+        console.log("response", response)
         return response.data
     }
     catch(error){
