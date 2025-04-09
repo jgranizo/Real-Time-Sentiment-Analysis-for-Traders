@@ -5,18 +5,33 @@ import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 function CorrelationPage(){
+    const today = new Date()
+    const correctToday = new Intl.DateTimeFormat('en-CA').format(today);
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate()-1)
+    const correctYesterday = new Intl.DateTimeFormat('en-CA').format(yesterday);
     const {ticker} = useParams();
     const [correlationData, setCorrelationData] = useState(null);
-    const [startDate,setStartDate] = useState(null)
-    const [endDate,setEndDate] = useState(null)
+    const [startDate,setStartDate] = useState(correctYesterday)
+    const [endDate,setEndDate] = useState(correctToday)
     useEffect(()=>{
         async function fetchData(){
             const data = await getCorrelationData(ticker,startDate,endDate);
             setCorrelationData(data)
-            console.log('recieved!',Object.values(data))
+            
         }
+        
         fetchData();
-    },[ticker])
+    },[endDate])
+
+        function setStart(start){
+                setStartDate( new Intl.DateTimeFormat('en-CA').format(start))
+              
+    }
+    function setEnd(end){
+        setEndDate( new Intl.DateTimeFormat('en-CA').format(end))
+    }
+
     return(
         <div>
             <p>Correlation Page</p>
@@ -24,15 +39,14 @@ function CorrelationPage(){
               <div> 
                 <div>
 
-                <DatePicker selected={startDate} on onChange={(startDate)=> setStartDate(startDate)}/>
+                <DatePicker selected={startDate} onChange={(startDate)=> setStart(startDate)}/>
                 </div>
-                <DatePicker selected={endDate} on onChange={(endDate)=> setEndDate(endDate)}/>
+                <DatePicker selected={endDate} onChange={(endDate)=> setEnd(endDate)}/>
+
                     </div>
-            {console.log("Test",correlationData)}
-            {console.log(startDate)}
-            {console.log(endDate)}
+           
             {correlationData?(<div><p>Data Successfully Aquired!</p>
-            <p>{Array.from(correlationData)}</p>
+            <p>{console.log(correlationData)}</p>
             
             
             </div>):(<p>Loading data ...</p>)}
