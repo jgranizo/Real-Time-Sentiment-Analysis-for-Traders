@@ -9,15 +9,14 @@ function CorrelationPage() {
   const today = new Date()
   const correctToday = new Intl.DateTimeFormat('en-CA').format(today);
   const yesterday = new Date(today)
-  yesterday.setDate(today.getDate() - 1)
+  yesterday.setDate(today.getDate() - 30)
   const correctYesterday = new Intl.DateTimeFormat('en-CA').format(yesterday);
-  const { ticker } = useParams();
-  const [company, setCompany] = useState(null);
+
+  const [company, setCompany] = useState("TSLA");
   const [correlationData, setCorrelationData] = useState(null);
   const [startDate, setStartDate] = useState(correctYesterday)
   const [endDate, setEndDate] = useState(correctToday)
 
-  var companyList = ["TSLA", "APPL", "MSFT"]
   // setting the margins and dimensions of the graph
   var margin = { top: 10, right: 100, bottom: 30, left: 30 },
     width = 460 - margin.left - margin.right,
@@ -27,8 +26,11 @@ function CorrelationPage() {
 
   // append the svg object to the body of the page
   useEffect(() => {
+    if (!company){
+      return
+    }
     async function fetchData() {
-      const data = await getCorrelationData(ticker, startDate, endDate);
+      const data = await getCorrelationData(company, startDate, endDate);
       setCorrelationData(data)
 
     }
@@ -41,14 +43,7 @@ d3.select("#RAI_correlation").select("svg").remove();
 d3.select("#stock-chart").select("svg").remove();
 d3.select("#sentiment-chart").select("svg").remove();
     // Clear and create dropdown
-    d3.select("#selectButton").selectAll("option").remove();
-    d3.select("#selectButton")
-      .selectAll("myOptions")
-      .data(allGroup)
-      .enter()
-      .append("option")
-      .text(d => d)
-      .attr("value", d => d);
+ 
 
     fetchData();
   }, [startDate, endDate, company])
@@ -156,46 +151,32 @@ d3.select("#sentiment-chart").select("svg").remove();
       .range([0, width]);
 
     //create x axis for sentiment correlation data
-    svg.selectAll(".x-axis")
-      .data([null])
-      .join(
-        enter => enter.append("g")
-          .attr("class", "x-axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x)),
-        update => update
-          .transition()
-          .duration(1000)
-          .call(d3.axisBottom(x))
-      );
-
+    svg.append("g")
+    .attr("class", "x-axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(
+      d3.axisBottom(x)
+        .ticks(6) // limit number of ticks (optional)
+        .tickFormat(d3.timeFormat("%b %d")) // e.g. "Apr 11"
+    );
     //create x axis for stock data
-    stock_svg.selectAll(".x-axis")
-      .data([null])
-      .join(
-        enter => enter.append("g")
-          .attr("class", "x-axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x)),
-        update => update
-          .transition()
-          .duration(1000)
-          .call(d3.axisBottom(x))
-      );
+    stock_svg.append("g")
+    .attr("class", "x-axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(
+      d3.axisBottom(x)
+        .ticks(6) // limit number of ticks (optional)
+        .tickFormat(d3.timeFormat("%b %d")) // e.g. "Apr 11"
+    );
 
-    sentiment_svg.selectAll(".x-axis")
-      .data([null])
-      .join(
-        enter => enter.append("g")
-          .attr("class", "x-axis")
-          .attr("transform", "translate(0," + height + ")")
-          .call(d3.axisBottom(x)),
-        update => update
-          .transition()
-          .duration(1000)
-          .call(d3.axisBottom(x))
-      );
-
+    sentiment_svg.append("g")
+  .attr("class", "x-axis")
+  .attr("transform", "translate(0," + height + ")")
+  .call(
+    d3.axisBottom(x)
+      .ticks(6) // limit number of ticks (optional)
+      .tickFormat(d3.timeFormat("%b %d")) // e.g. "Apr 11"
+  );
 
     const y = d3.scaleLinear()
       .domain([d3.min(RAIData), d3.max(RAIData)])
@@ -282,7 +263,7 @@ d3.select("#sentiment-chart").select("svg").remove();
       update(selectedOption);
     });
 
-  }, [correlationData, startDate, endDate]); // Only runs once on mount
+  }, [correlationData, startDate, endDate,company]); // Only runs once on mount
 
 
 
@@ -295,6 +276,12 @@ d3.select("#sentiment-chart").select("svg").remove();
     setEndDate(new Intl.DateTimeFormat('en-CA').format(end))
   }
 
+  function setSelectedCompany(e){
+    console.log(e)
+    var companySelected = e.target.value;
+    setCompany(companySelected)
+    console.log(companySelected)
+  }
 
 
   return (
@@ -303,7 +290,7 @@ d3.select("#sentiment-chart").select("svg").remove();
       <link rel="stylesheet" href="correlation.css"></link>
 
       <p>Correlation Page</p>
-      <p>Reddit Data for {ticker}</p>
+      <p>Reddit Data for {company}</p>
       <div>
 
 
@@ -311,7 +298,15 @@ d3.select("#sentiment-chart").select("svg").remove();
           <div className='main'>
           <div className='main-chart'>
             <div className='container' id="stock-chart"></div>
-            <select id='selectButton'></select></div>
+           
+            <select name="companies" id="companies" onChange={(e)=>setSelectedCompany(e)}>
+              <option value="TSLA">Tesla</option>
+              <option value="MSFT">Microsoft</option>
+              <option value="APPL">Apple</option>
+            </select>
+            {console.log()}
+            
+            </div>
             <div className='Dates'>
           <DatePicker selected={startDate} onChange={(startDate) => setStart(startDate)} />
         
@@ -331,20 +326,13 @@ d3.select("#sentiment-chart").select("svg").remove();
        
         
 
-      {correlationData ? (<div><p>Data Successfully Aquired!</p>
-        <p>
+      {correlationData ? (correlationData['0']? console.log(correlationData['0']):
+      <p>There was no data for this company between the given dates</p>):<p>Waiting</p>
+      
+    
+    }
 
-
-        </p>
-        {typeof correlationData['0'] !== 'undefined' && (
-          console.log(correlationData['0'][5][0]['date'])
-        )
-          //correlationDate['0'][5][0] gets dictionary of all the data values
-        }
-        {console.log(Object.keys(correlationData))}
-
-
-      </div>) : (<p>Loading data ...</p>)}
+      
     </div>
   )
 }
