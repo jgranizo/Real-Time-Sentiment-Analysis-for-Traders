@@ -301,7 +301,7 @@ def fetch_reddit_post():
 
 def get_reddit_data(ticker):
     uppercaseTicker = str(ticker).upper()
-    companies = {"TSLA": "Tesla","MSFT":"Microsoft","APPL": "Apple"}
+    companies = {"TSLA": "Tesla","MSFT":"Microsoft","AAPL": "Apple"}
     if uppercaseTicker not in companies.keys():
         print("Not a valid ticker")
         return 
@@ -315,7 +315,7 @@ def get_reddit_data(ticker):
 
 def get_reddit_data_by_date(ticker,start_date=None,end_date=None):
     uppercaseTicker = str(ticker).upper()
-    companies = {"TSLA": "Tesla","MSFT":"Microsoft","APPL": "Apple"}
+    companies = {"TSLA": "Tesla","MSFT":"Microsoft","AAPL": "Apple"}
     if uppercaseTicker not in companies.keys():
         print("Not a valid ticker")
         return 
