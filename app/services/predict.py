@@ -60,9 +60,10 @@ def predict(text):
         input_ids, attention_masks = tokenize_texts([preprocessed_text], tokenizer, max_len=140)
         input_ids, attention_masks = input_ids.to(device), attention_masks.to(device)
 
-        label_mapping = {0: "Negative", 1: "Neutral", 2: "Positive"}
+        label_mapping = {0: 1, 1:2, 2: 3}
         with torch.no_grad():
             outputs = model(input_ids, attention_mask=attention_masks)
             sentiment = torch.argmax(outputs.logits, dim=1).item()
-        return sentiment
+            sentiment_scaled = label_mapping[sentiment]
+        return sentiment_scaled
 
