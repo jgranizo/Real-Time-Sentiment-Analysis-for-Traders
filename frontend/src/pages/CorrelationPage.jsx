@@ -34,7 +34,7 @@ function CorrelationPage() {
       setCorrelationData(data)
 
     }
-    const allGroup = ["TSLA", "MSFT", "APPL"];
+    const allGroup = ["TSLA", "MSFT", "AAPL"];
 
     d3.select("#RAI_correlation").selectAll("*").remove();
     d3.select("#stock-chart").selectAll("*").remove();
@@ -138,7 +138,7 @@ d3.select("#sentiment-chart").select("svg").remove();
 
     // Load CSV and build chart
 
-    const allGroup = ["TSLA", "MSFT", "APPL"];
+    const allGroup = ["TSLA", "MSFT", "AAPL"];
 
 
 
@@ -302,7 +302,7 @@ d3.select("#sentiment-chart").select("svg").remove();
             <select name="companies" id="companies" onChange={(e)=>setSelectedCompany(e)}>
               <option value="TSLA">Tesla</option>
               <option value="MSFT">Microsoft</option>
-              <option value="APPL">Apple</option>
+              <option value="AAPL">Apple</option>
             </select>
             {console.log()}
             
