@@ -1,8 +1,8 @@
 from flask import Blueprint,jsonify,request
-from app.services.stock_service import get_stock_data,get_stock_by_date
+from app.services.stock_service import get_stock_data,get_stock_by_date, fetch_stock_by_date
 
 #create blueprint for stock first
-stock_bp = Blueprint("stock",__name__,)
+stock_bp = Blueprint("stock",__name__)
 #create route for stock
 @stock_bp.route('/<ticker>',methods=['GET'])
 #create function for stock to retrieve data
@@ -20,3 +20,14 @@ def  fetch_stock_data(ticker):
     if data:
         return jsonify(data), 200
     return jsonify({"message": "No data found for the specific ticker"}), 404
+
+
+@stock_bp.route('fetch',methods=['Get'])
+def scrape_stock_data():
+   
+
+
+    data = fetch_stock_by_date()
+    if data:
+        return jsonify(data), 200
+    return jsonify({"message: No data found"})
