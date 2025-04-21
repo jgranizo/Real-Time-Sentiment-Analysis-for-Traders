@@ -4,20 +4,16 @@ import csv
 from datetime import datetime, timedelta, timezone
 from app.models import RedditPostData
 from app.extensions import db
-from app.services.predict import predict
 import json
 import os
-import re
-import torch
-from transformers import BertTokenizer, BertForSequenceClassification, AutoTokenizer, AutoModelForTokenClassification
-
+import requests
 # Initialize Reddit API client with your credentials
 reddit = praw.Reddit(
     client_id="ZPr2EshdHCAQUHQ1B4LRdQ",
     client_secret="D_pSNQdQpLFu0xkme74Sket1zGUorg",
     user_agent="BrandDataCollector/1.0 by u/jgran",
 )
-
+model_url = 'http://127.0.0.1:5000/api/model/calculate'
 # Define criteria
 brand_name = [
     "Apple", "Microsoft", "Amazon", "Google",
@@ -179,54 +175,7 @@ subreddit_dictionary = {}
 
 
 
-#setting up model
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-base_dir = os.path.dirname(os.path.abspath(__file__))  # location of the current file
-model_dir = os.path.join(base_dir,"..", "SentimentalModel")
-tokenizer = BertTokenizer.from_pretrained(model_dir)
-model = BertForSequenceClassification.from_pretrained(model_dir).to(device)
-model.eval()
 
-def preProcessed(text):
-    if not isinstance(text, str):
-        return ""
-    text = text.lower()
-    text = re.sub(r'http\S+|www\S+|https\S+', '[URL]', text)
-    text = re.sub(r'@\w+', '[USER]', text)
-    text = re.sub(r'\s+', ' ', text).strip()
-    return text
-
-def calculateSentimentValues(comments):
-    sentiments = {1:0,2:0,3:0}
-    #negative-0    neutral-1,        positive-2
-
-    #each comment increments a counter for its corresponding sentiment
-    if not comments:
-        return sentiments
-    preprocessed = [preProcessed(c) for c in comments]
-
-    #Batch tokenize
-    encoded = tokenizer(
-        preprocessed,
-        padding=True,
-        truncation=True,
-        max_length=140,
-        return_tensors='pt'
-    )
-    input_ids = encoded['input_ids'].to(device)
-    attention_mask = encoded['attention_mask'].to(device)
-
-
-    with torch.no_grad():
-        outputs=model(input_ids,attention_mask=attention_mask)
-        predictions = torch.argmax(outputs.logits,dim=1).tolist()
-    
-    label_mapping = {0:1,1:2,2:3}
-    for raw_pred in predictions:
-        sentiment = label_mapping[raw_pred]
-        sentiments[sentiment]+=1
-    return sentiments
-    
 
 def fetch_reddit_post():
     for subreddit_name in subreddits:
@@ -257,15 +206,18 @@ def fetch_reddit_post():
                     post.comment_sort = 'top'
                     post.comments.replace_more(limit=0)
                     comments = [comment.body for comment in post.comments]
-                    SentimentMap=calculateSentimentValues(comments)
+                    obj = {"comments": comments}
+                    '''Making post requests to model'''
+                    sentiments = requests.post(model_url,json=obj)
+                    SentimentMap=sentiments.json()
                     print(SentimentMap,"---------------------")
-                    positive_comments=SentimentMap[3]
-                    neutral_comments=SentimentMap[2]
-                    negative_comments=SentimentMap[1]
+                    positive_comments=SentimentMap["predictions"]["3"]
+                    neutral_comments=SentimentMap["predictions"]["2"]
+                    negative_comments=SentimentMap["predictions"]["1"]
                     
-                    positive_comments_score = SentimentMap[3]*3
-                    neutral_comments_score = SentimentMap[2]*2
-                    negative_comments_score = SentimentMap[1]
+                    positive_comments_score = SentimentMap["predictions"]["3"]*3
+                    neutral_comments_score = SentimentMap["predictions"]["2"]*2
+                    negative_comments_score = SentimentMap["predictions"]["1"]
                     sentiment_score = (positive_comments_score+neutral_comments_score+negative_comments_score)/len(comments)
                     post_info = {
                     "title": post.title,
