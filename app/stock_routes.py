@@ -1,5 +1,5 @@
 from flask import Blueprint,jsonify,request
-from app.services.stock_service import get_stock_data,get_stock_by_date, fetch_stock_by_date
+from app.services.stock_service import get_stock_data,get_stock_by_date, fetch_stock_by_date, fetch_yesterday_stocks
 
 #create blueprint for stock first
 stock_bp = Blueprint("stock",__name__)
@@ -27,7 +27,7 @@ def scrape_stock_data():
    
 
 
-    data = fetch_stock_by_date()
+    data = fetch_yesterday_stocks()
     if data:
         return jsonify(data), 200
     return jsonify({"message: No data found"})
