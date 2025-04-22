@@ -4,7 +4,10 @@ from datetime import datetime
 import yfinance as yf
 import pandas as pd
 from app.extensions import db
-import pprint
+
+
+
+
 def get_stock_data(ticker):
     try:
         stocks=StockData.query.filter(StockData.ticker == ticker).all()
@@ -14,12 +17,6 @@ def get_stock_data(ticker):
         print(f"Error retrieving stock data: {e}")
         return None
        
-def sanitize_value(val, threshold=1e10):
-    if pd.isnull(val):
-        return 0.00
-    if abs(val) > threshold:
-        return 0.00
-    return val
 
 def insert_stock_data(df):
     '''
@@ -84,9 +81,9 @@ def fetch_stock_by_date():
         "NSRGY", "NVS", "SHEL", "BP", "TTE", "HSBC",
         "BCS", "DB", "UBS"]
     try:        
-        now_time = datetime.now().strftime('%Y-%m-%d')
+        end_time = datetime.now().strftime('%Y-%m-%d')
         start_time = f"{datetime.now().year - 5}-{datetime.now().month:02d}-{datetime.now().day:02d}"
-        df = yf.download(tickerStrings, group_by='Ticker', start=start_time,end=now_time)
+        df = yf.download(tickerStrings, group_by='Ticker', start=start_time,end=end_time)
         print("Success downloading data!")
 
         df = df.stack(level=0).rename_axis(['Date', 'Ticker']).reset_index()
@@ -140,4 +137,65 @@ def get_stock_by_date(ticker,start_date=None,end_date=None):
     except Exception as e:
         print(f"Error retrieving stock data: {e}")
         return None
+    
+def fetch_yesterday_stocks():
+    start_time = f"{datetime.now().year }-{datetime.now().month:02d}-{datetime.now().day-1}"
+    end_time = datetime.now().strftime('%Y-%m-%d')
+    tickerStrings=["AAPL", "MSFT", "AMZN", "GOOGL",
+        "NVDA", "META", "TSLA", "JPM",
+        "JNJ", "V", "UNH", "PG", "XOM",
+        "MA", "HD", "BAC", "WMT", "PFE",
+        "CVX", "KO", "PEP", "INTC", "ABBV", "CSCO",
+        "CMCSA", "NFLX", "ADBE", "CRM", "DIS",
+        "T", "VZ", "MRK", "TMO", "ABT", "ACN",
+        "MCD", "AVGO", "ORCL", "QCOM", "TXN",
+        "COST", "HON", "AMGN", "IBM", "SBUX", "MMM",
+        "BA", "CAT", "LMT", "RTX", "GE", "GM",
+        "F", "DAL", "AAL", "LUV",
+        "MAR", "HLT", "UBER", "LYFT", "ZM", "PLTR",
+        "SNOW", "SHOP", "COIN", "ROKU", "SPOT",
+        "DKNG", "HOOD", "LCID", "RIVN", "DASH",
+        "ABNB", "INTC", "MU", "AMD", "NIO", "BABA",
+        "TCEHY", "BIDU", "TM", "SONY", "SSNLF", "003550.KQ",
+        "ASML", "TSM", "SAP", "SIEGY", "GSK", "UL",
+        "NSRGY", "NVS", "SHEL", "BP", "TTE", "HSBC",
+        "BCS", "DB", "UBS"]
+    try:        
+        df = yf.download(tickerStrings, group_by='Ticker', start=start_time,end=end_time)
+        print("Success downloading data!")
+
+        df = df.stack(level=0).rename_axis(['Date', 'Ticker']).reset_index()
+       
+        df = df.rename(columns={"Date":"date","Open":"open","Close":"close","High":"high","Low":"low","Ticker":"ticker","Volume":"volume"})
+        df =df.dropna()
+        df['date'] = df['date'].dt.date
+        df = df[
+            (df['open'] >= 0.0) &
+            (df['high'] >= 0.0) &
+            (df['low'] >= 0.0) &
+            (df['close'] >= 0.0) &
+            (df['volume'] >= 0.0)
+        ]
+        threshold = 1e8  # 100 million
+
+        df = df[
+            (df['open'].abs() < threshold) &
+            (df['high'].abs() < threshold) &
+            (df['low'].abs() < threshold) &
+            (df['close'].abs() < threshold) &
+            (df['volume'].abs() < threshold)
+        ]
+        df['open'] = df['open'].apply(lambda x: round(x,2))
+        df['high'] = df['high'].apply(lambda x: round(x,2))
+        df['low'] = df['low'].apply(lambda x: round(x,2))
+        df['close'] = df['close'].apply(lambda x: round(x,2))
+        df['volume'] = df['volume'].apply(lambda x: round(x,2))
+
+        insert_stock_data(df)
+        print(df.head())
+        return "success inserting data into database"
+    except Exception as e:
+        print(f"Error fetching stock data: {e}")
+        return None
+        
     
